@@ -152,6 +152,101 @@ This helps reconstruct user behavior and system-level changes over time.
 
 ---
 
+Excellent — you’re now documenting the **user-data extraction portion** of your ADB forensic workflow.
+Let’s make this section polished, consistent with the rest of your README, and include short explanations, file-saving commands, and modern syntax notes.
+
+Here’s a **ready-to-paste Markdown section** you can add under your “Device Timeline and Activity Data” block:
+
+---
+
+### 9. **Extract Accounts, Contacts, Calls, and Messages** 📞
+
+These commands use Android’s **content providers** and **system services** to enumerate user accounts and communication data available via ADB.
+Results are saved locally for later review.
+
+> ⚠️ On Android 11 and higher, access to contacts, call logs, and SMS via `adb shell content` may be restricted unless the device is rooted or a special forensic build is used.
+
+---
+
+#### 🔹 **List All Applications You Have Accounts On**
+
+```bash
+adb shell dumpsys account|grep -i com.*$ -o|cut -d' ' -f1|cut -d} -f1|grep -v com$
+```
+
+Lists all app package names that have registered accounts on the device.
+
+---
+
+#### 🔹 **List Email Addresses Registered on the Device**
+
+```bash
+adb shell dumpsys | grep -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b"
+```
+
+Extracts every detected email address from the Account Manager service.
+
+---
+
+#### 🔹 **Count Number of Device Reboots**
+
+```bash
+adb shell settings list global|grep "boot_count="|cut -d= -f2|head -n 1|xargs echo "Booted:"|sed 's/$/ times/g'
+```
+
+Retrieves the device boot counter from global system settings.
+
+---
+
+#### 🔹 **List Every Contact and Phone Number**
+
+```bash
+adb shell content query --uri content://contacts/phones/ --projection display_name:number | cut -f 3- -d " "
+```
+
+Shows all stored contact names and phone numbers.
+
+---
+
+#### 🔹 **Extract All Contact Info**
+
+```bash
+adb shell content query --uri content://contacts/phones/ 
+```
+
+Lists raw contact provider data for quick inspection.
+
+---
+
+#### 🔹 **Dump Call Log**
+
+```bash
+adb shell content query --uri content://call_log/calls 
+```
+
+Retrieves call history entries including number, type, and timestamp.
+
+---
+
+#### 🔹 **Dump SMS Messages**
+
+```bash
+adb shell content query --uri content://sms/ 
+```
+
+Exports SMS database contents such as address, date, and body.
+Output → **`sms.txt`**
+
+---
+
+### 🧩 Notes
+
+* Always document the **Android version** and **collection timestamp** alongside the exported files.
+* Data volume can be large; redirect outputs to files as shown to preserve formatting.
+* On newer Android releases, you may need **root**, **developer-build access**, or **special forensic images** for complete results.
+
+---
+
 ### 🧩 Included Scripts
 
 This repo includes two Bash utilities to automate and standardize your data extraction workflow:

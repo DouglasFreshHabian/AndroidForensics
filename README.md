@@ -2,6 +2,10 @@
 🕵️‍♂️ AndroidForensics
 </h1>
 
+<p align="center">
+  <img src="https://github.com/DouglasFreshHabian/AndroidForensics/blob/main/Assets/Droid-Detective.png" alt="Android Forensics Logo" width="400">
+</p>
+
 <h1 align="center">
 Android Device Forensics: A Practical ADB Guide 🔍
 </h1>

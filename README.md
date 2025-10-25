@@ -156,20 +156,140 @@ This helps reconstruct user behavior and system-level changes over time.
 
 This repo includes two Bash utilities to automate and standardize your data extraction workflow:
 
-#### **`androidQuickDump.sh`**
+#### **`extract.sh`**
 
 <details>
 <summary>🖱 Click to Expand</summary>
 
-* Quickly gathers key forensic artifacts:
+Excellent — this is a **much more advanced version** of your earlier ADB script. It not only gathers system diagnostics but also extracts **user-level data** (contacts, call logs, SMS, accounts). Let’s go through what it does in detail and then pick a fitting name.
 
-  * Device info (model, build, serial)
-  * Installed apps
-  * Battery stats
-  * Logs
-  * Network configuration
-* Saves all outputs into a timestamped directory for organization.
-* Color-coded console output for clarity.
+---
+
+## 🧩 **What This Script Does**
+
+This Bash script performs an **automated ADB-based forensic data and diagnostics extraction** from a connected Android device.
+It’s designed for **system analysis, auditing, or incident response** — collecting both **system snapshots** and **select user-accessible data** in a single organized run.
+
+---
+
+### 🔧 **Step-by-Step Overview**
+
+#### **1. Environment & Device Setup**
+
+* Checks that `adb` (Android Debug Bridge) is installed.
+* Starts the ADB server silently.
+* Detects a connected Android device (`adb devices`).
+* Exits if no authorized device is found.
+* Displays the connected device ID.
+
+#### **2. Creates a Timestamped Output Folder**
+
+Example:
+
+```
+ADB_Report_20251025_163200/
+```
+
+All collected data is stored here, one file per command.
+
+---
+
+### 📋 **3. Core Function — `run_adb_command`**
+
+A helper that:
+
+* Displays a colorized header describing the task.
+* Runs the given ADB command.
+* Saves output to a specified filename.
+* Optionally runs “silent” tasks (no console output, for noisy commands).
+
+---
+
+### 🧠 **4. Data Collected**
+
+#### 📱 **Device & System Information**
+
+| Category     | Description                                  | Command                                             |
+| ------------ | -------------------------------------------- | --------------------------------------------------- |
+| Basic Info   | Model, manufacturer, Android version, serial | `getprop ...`                                       |
+| Device State | Uptime, battery, and connectivity            | `uptime`, `dumpsys battery`, `dumpsys connectivity` |
+| Network Info | Interface config                             | `ifconfig` or `ip addr show`                        |
+
+---
+
+#### 👤 **User & App Data Extraction**
+
+| Data                   | Description                      | Command                                          |
+| ---------------------- | -------------------------------- | ------------------------------------------------ |
+| **Accounts**           | Extracts account package names   | `dumpsys account`                                |
+| **Email addresses**    | Extracts email strings via regex | `dumpsys account`                                |
+| **Reboot count**       | Reads global boot counter        | `settings list global`                           |
+| **Contacts**           | Lists contacts and phone numbers | `content query --uri content://contacts/phones/` |
+| **Call logs**          | Queries system call history      | `content query --uri content://call_log/calls`   |
+| **SMS messages**       | Dumps all SMS database entries   | `content query --uri content://sms/`             |
+| **Installed packages** | Lists all and third-party apps   | `pm list packages`                               |
+| **Running services**   | Dumps currently active services  | `dumpsys -l`                                     |
+
+> ⚠️ These use Android’s public **content providers**, meaning some data may not be available on modern devices (Android 11+ restricts SMS, contacts, etc. access via ADB unless rooted or with specific permissions).
+
+---
+
+#### ⚙️ **5. System Diagnostics**
+
+* **`logcat` snapshot:** Captures last ~1000 lines of logs.
+* **`bugreport`:** Generates a full system report in the background (`.zip` or `.txt`), allowing the user to continue using the script while it completes.
+
+---
+
+### 📊 **6. Final Summary**
+
+* Prints a color-coded summary table showing all collected files and their sizes.
+* Displays total runtime (excluding background bugreport).
+* Reminds the user that the bugreport will appear when finished.
+
+Example:
+
+```
+[✓] All ADB data extraction commands executed successfully!
+Summary of extracted files:
+device_info.txt         4.2K
+emails.txt              1.1K
+contacts.txt            32K
+sms.txt                 80K
+-------------------------------------------
+Results saved in: ADB_Report_20251025_163200
+Total runtime: 42s
+[i] Bugreport is running in the background...
+```
+
+---
+
+## ⚙️ **Use Cases**
+
+This script is suitable for:
+
+* **Incident response or forensic triage**
+* **Device auditing before handoff**
+* **Support or QA data collection**
+* **Security analysis / compliance snapshots**
+
+It collects:
+
+* **System state**
+* **Network and battery info**
+* **App lists**
+* **User-level communications data (where permitted)**
+* **Logs and bugreport**
+
+---
+
+## ⚠️ **Cautions / Limitations**
+
+* Access to **SMS, call logs, and contacts** may be blocked on newer Android versions (especially Android 11+).
+* Should only be used on devices you **own or have explicit consent** to examine.
+* Data collected may contain **personally identifiable information** — handle securely.
+
+---
 
 </details>
 
@@ -284,16 +404,16 @@ It’s non-invasive — it **does not pull user files (photos, downloads, etc.)*
 2. Make the scripts executable:
 
    ```bash
-   chmod +x androidQuickDump.sh dumpsys.sh
+   chmod +x extract.sh dumpsys.sh
    ```
 
-3. Run the quick scan:
+3. Run the `extract.sh` script:
 
    ```bash
-   ./androidQuickDump.sh
+   ./extract.sh
    ```
 
-4. Run the script:
+4. Run the `dumpsys.sh` script:
 
    ```bash
    ./dumpsys.sh
@@ -305,7 +425,7 @@ It’s non-invasive — it **does not pull user files (photos, downloads, etc.)*
 
 ```
 AndroidForensics/
-├── androidQuickDump.sh
+├── extract.sh
 ├── dumpsys.sh
 ├── Assets/
 │   └── Droid-Detective.png

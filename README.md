@@ -173,17 +173,100 @@ This repo includes two Bash utilities to automate and standardize your data extr
 
 </details>
 
-#### **`androidDeepDive.sh`**
+#### **`dumpsys.sh`**
 
 <details>
 <summary>🖱 Click to Expand</summary>
 
-* Performs an extended forensic capture:
+## 🧩 **What the `dumpsys.sh` Script Does**
 
-  * Dumpsys output for key system services
-  * Pulls accessible data directories (DCIM, Downloads, etc.)
-  * Extracts additional diagnostic info (storage, activity, processes)
-* Organizes results in structured folders per run.
+This Bash script is an **automated Android diagnostics collector**.
+It connects to an Android device over **ADB (Android Debug Bridge)** and runs a series of **`dumpsys` commands** — each targeting a key Android system service — then saves their outputs into organized text files.
+
+Here’s what happens step by step:
+
+---
+
+### 🧱 **1. Setup & Environment Checks**
+
+* Checks that the `adb` tool is installed and accessible in your system `PATH`.
+* Starts the ADB server if it’s not already running.
+* Waits up to **30 seconds (10 retries × 3s)** for an Android device to be connected and authorized.
+* Accepts an optional **device serial** as an argument (useful if multiple devices are connected).
+
+---
+
+### 📂 **2. Creates a Timestamped Report Directory**
+
+Creates an output folder such as:
+
+```
+DumpSysReport_20251025_153000/
+```
+
+All command outputs are saved in this directory, each to its own `.txt` file.
+
+---
+
+### ⚙️ **3. Runs a Series of System Commands via ADB**
+
+It loops through a predefined list of **21 `dumpsys` services**, including:
+
+| Command                       | Purpose                          |
+| ----------------------------- | -------------------------------- |
+| `dumpsys meminfo`             | Memory usage                     |
+| `dumpsys media.audio_flinger` | Audio playback internals         |
+| `dumpsys sensorservice`       | Sensor (motion/environment) data |
+| `dumpsys adb`                 | ADB subsystem info               |
+| `dumpsys account`             | Accounts and sync services       |
+| `dumpsys fingerprint`         | Fingerprint authentication info  |
+| `dumpsys netstats`            | Network usage statistics         |
+| `dumpsys power`               | Power manager and wake locks     |
+| `dumpsys location`            | GPS and location services        |
+| `dumpsys notification`        | Notification history             |
+| `dumpsys telecom`             | Telephony/call data              |
+| `dumpsys wifi`                | Wi-Fi state/history              |
+| ...and more                   |                                  |
+
+Each command’s output is:
+
+* Displayed live in the terminal (`tee`)
+* Saved to a corresponding file (e.g., `wifi.txt`, `meminfo.txt`)
+
+If a command fails, it’s logged as failed — otherwise marked as succeeded.
+
+---
+
+### 📊 **4. Generates a Summary**
+
+At the end, it prints a color-coded summary:
+
+```
+Succeeded Commands: 20
+ ✔ dumpsys meminfo
+ ✔ dumpsys wifi
+ ...
+
+Failed Commands: 1
+ ✖ dumpsys clipboard
+
+All outputs saved in DumpSysReport_20251025_153000
+```
+
+---
+
+## 🧠 **Purpose / Use Case**
+
+This script is ideal for:
+
+* **Developers** gathering system state for debugging.
+* **QA engineers** doing regression tests or bug triage.
+* **Forensic analysts** collecting non-user diagnostic data.
+* **Tech support** capturing structured device reports.
+
+It’s non-invasive — it **does not pull user files (photos, downloads, etc.)** — only system service states available via ADB.
+
+---
 
 </details>
 
@@ -201,7 +284,7 @@ This repo includes two Bash utilities to automate and standardize your data extr
 2. Make the scripts executable:
 
    ```bash
-   chmod +x androidQuickDump.sh androidDeepDive.sh
+   chmod +x androidQuickDump.sh dumpsys.sh
    ```
 
 3. Run the quick scan:
@@ -210,10 +293,10 @@ This repo includes two Bash utilities to automate and standardize your data extr
    ./androidQuickDump.sh
    ```
 
-4. Run the deep forensic capture:
+4. Run the script:
 
    ```bash
-   ./androidDeepDive.sh
+   ./dumpsys.sh
    ```
 
 ---
@@ -223,7 +306,7 @@ This repo includes two Bash utilities to automate and standardize your data extr
 ```
 AndroidForensics/
 ├── androidQuickDump.sh
-├── androidDeepDive.sh
+├── dumpsys.sh
 ├── Assets/
 │   └── Droid-Detective.png
 ├── outputs/

@@ -239,7 +239,7 @@ Output → **`sms.txt`**
 
 ---
 
-### 🧩 Notes
+### 📑 Notes
 
 * Always document the **Android version** and **collection timestamp** alongside the exported files.
 * Data volume can be large; redirect outputs to files as shown to preserve formatting.
